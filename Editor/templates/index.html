@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html><head>
+  <title> WSD </title>
+    <meta charset="utf-8">
+
+ 
+ 
+    <link rel="stylesheet" href="static/css/live.css" />
+    <link rel="stylesheet" href="static/css/loader.css" />
+    <script src="/static/lib/jquery-1.7.min.js"></script>
+
+    <link rel="stylesheet" href="/static/redactor/redactor.css" />
+    <script src="/static/redactor/redactor.js"></script>
+ 
+
+    <style type="text/css">
+	body .redactor_toolbar li a.redactor_btn_button1 {
+		background: url(/static/img/button1.png) no-repeat;
+	}
+	</style>
+	
+	<script type="text/javascript">
+	
+	function testButton(obj, event, key)
+	{
+		obj.execCommand('underline');
+	}
+	
+	$(document).ready(
+		function()
+		{
+
+			
+			$('#123').redactor({
+				focus: true, 
+				buttonsAdd: ['|', 'button1'], 
+				buttonsCustom: {
+					button1: {
+						title: 'Disambiguate', 
+						callback: function(obj)
+						{
+							
+							var text = $('#123').val();
+							var selected_word = $('#123').getSelected();
+							if(selected_word == ""){
+								alert ( " Please select the word to be disambiguated");
+								return false;
+							}
+							var updateKB = "off"
+							if ($('#kb_update').is(':checked')) {
+								updateKB = "on"
+							} else {
+								updateKB = "off"
+							} 
+							//alert(selected_word);
+							$("#loader").show()
+							$.ajax({
+								type: "POST",
+								url: "/Preprocess/",
+								data: {wsdText: text, wsdWord : selected_word, updateKB : updateKB },
+								cache: false,
+								beforeSend: function(){
+									setInterval("showStatus();",2000); 
+									
+								},
+								success: function(html){
+									$("#loader").hide()
+									$("#response").html(html);
+								}
+								});
+						}
+                     
+					} 
+				}  
+			});	
+$('.redactor_btn_button1').addClass("testbu");		
+		
+		}
+	);
+function showStatus(){
+	$.ajax({
+		type: "POST",
+		url: "/status/",
+		cache: false,
+		success: function(html){
+			$(".triggerFull").html(html);
+		}
+		});
+}
+	</script>				
+
+</head>
+<body>
+{% block content %}
+{% endblock %}
+	<div id="page">
+
+		<textarea id="123" name="content">
+			 A large company needs sustainable business model.
+		</textarea>
+</br>
+<div style="color: #fff; border: 1px #fff solid">
+<input id="kb_update" value="ok" type="checkbox"/> Update Knowledge Base</div
+</br></br>
+<div id="loader" style="display:none">
+	<div class="circle"></div>
+	<div class="circle1"></div>
+	<div href="#" class="triggerFull">Sending The Request</div>
+</div>
+<div id="response"></div>
+</body></html>
